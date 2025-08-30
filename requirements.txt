@@ -1,0 +1,42 @@
+# Core dependencies for LLM Evaluation Framework
+
+# Data handling
+datasets>=2.14.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Model clients
+litellm>=1.0.0
+httpx>=0.24.0
+openai>=1.0.0
+
+# Metrics and evaluation
+evaluate>=0.4.0
+rouge-score>=0.1.2
+
+# Configuration and validation
+pydantic>=2.0.0
+omegaconf>=2.3.0
+pyyaml>=6.0
+
+# Concurrency and robustness
+tenacity>=8.2.0
+tqdm>=4.65.0
+
+# Data I/O and caching
+jsonlines>=3.1.0
+orjson>=3.9.0
+diskcache>=5.6.0
+
+# Statistics
+scipy>=1.10.0
+statsmodels>=0.14.0
+
+# Visualization
+matplotlib>=3.7.0
+plotly>=5.15.0
+
+# Utilities
+jinja2>=3.1.0
+click>=8.1.0
+python-dotenv>=1.0.0
