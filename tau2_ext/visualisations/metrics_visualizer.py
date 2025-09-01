@@ -21,7 +21,7 @@ class MetricsVisualizer(BaseVisualizer):
         self.sequence_visualizer = SequenceVisualizer()
         self.complexity_visualizer = ComplexityVisualizer()
     
-    def plot_tci_bar_by_domain(self, tci_df: pd.DataFrame, df: pd.DataFrame, k: int = 10, title: str = "Tool Criticality Index by Domain", save_path: Optional[Path] = None):
+    def plot_tci_bar_by_domain(self, tci_df: pd.DataFrame, df: pd.DataFrame, k: int = 20, title: str = "Tool Criticality Index by Domain", save_path: Optional[Path] = None):
         """Plot TCI bar chart with confidence intervals, separated by domain."""
         return self.tci_visualizer.plot_by_domain(tci_df, df, k, title, save_path)
     

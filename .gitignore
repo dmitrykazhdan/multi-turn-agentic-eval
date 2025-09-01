@@ -10,3 +10,4 @@
 /tau2_ext/data_processing/__pycache__
 /tau2_ext/metrics/__pycache__
 /tau2_ext/visualisations/__pycache__
+*.pyc

@@ -11,7 +11,7 @@ from tau2_ext.visualisations.base_visualizer import BaseVisualizer
 class TCIVisualizer(BaseVisualizer):
     """Visualizer for Tool Criticality Index (TCI) metrics."""
     
-    def plot_by_domain(self, tci_df: pd.DataFrame, df: pd.DataFrame, k: int = 10, 
+    def plot_by_domain(self, tci_df: pd.DataFrame, df: pd.DataFrame, k: int = 20, 
                       title: str = "Tool Criticality Index by Domain", 
                       save_path: Optional[Path] = None):
         """Plot TCI bar chart separated by domain."""
@@ -60,7 +60,7 @@ class TCIVisualizer(BaseVisualizer):
         else:
             plt.show()
     
-    def plot_simple(self, tci_df: pd.DataFrame, k: int = 10, 
+    def plot_simple(self, tci_df: pd.DataFrame, k: int = 20, 
                    title: str = "Tool Criticality Index (Top-k)",
                    save_path: Optional[Path] = None):
         """Plot simple TCI bar chart."""
