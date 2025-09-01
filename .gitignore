@@ -2,3 +2,7 @@
 /venv
 /src/__pycache__
 /src/models/__pycache__
+/tau2_ext/__pycache__
+/analytics_results
+.DS_Store
+/data

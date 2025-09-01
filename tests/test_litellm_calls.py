@@ -47,6 +47,7 @@ def test_direct_litellm():
         print(f"❌ Error with grok-3 direct call: {e}")
         return False
 
+
 def test_async_litellm():
     """Test async LiteLLM calls."""
     
@@ -80,6 +81,7 @@ def test_async_litellm():
             return False
     
     return asyncio.run(test_async())
+
 
 def main():
     """Run all tests."""

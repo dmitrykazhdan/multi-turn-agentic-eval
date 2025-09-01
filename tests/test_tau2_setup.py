@@ -9,8 +9,8 @@ This script checks:
 4. Basic functionality
 
 SETUP ASSUMPTIONS:
-1. The multi-turn agentic evaluation framework and tau-bench are installed in the same parent directory
-2. The .env file is in the multi-turn agentic evaluation framework directory
+1. The multi-turn agentic evaluation framework and tau2-bench are installed in the same parent directory
+2. The .env file is in our multi-turn folder 
 3. The tau2-bench directory has a virtual environment named ".venv"
 """
 
@@ -19,19 +19,22 @@ import sys
 import subprocess
 from pathlib import Path
 
+# Define path variables
+PARENT_PATH = Path("/Users/AdminDK/code")
+CODE_PATH = PARENT_PATH / "multi-turn-agentic-eval"
+TAU2_PATH = PARENT_PATH / "tau2-bench"
+
 def test_tau2_installation():
     """Test if tau2-bench is properly installed."""
     
     print("🔍 Testing tau2-bench installation...")
     
-    tau2_path = Path(__file__).parent.parent / "tau2-bench"
-    
-    if not tau2_path.exists():
-        print("❌ tau2-bench directory not found at ../tau2-bench")
+    if not TAU2_PATH.exists():
+        print(f"❌ tau2-bench directory not found at {TAU2_PATH}")
         return False
     
     # Check if virtual environment exists
-    venv_path = tau2_path / ".venv"
+    venv_path = TAU2_PATH / ".venv"
     if not venv_path.exists():
         print("❌ tau2-bench virtual environment not found")
         return False
@@ -39,10 +42,10 @@ def test_tau2_installation():
     # Check if tau2 command is available
     try:
         result = subprocess.run(
-            ["../tau2-bench/.venv/bin/tau2", "--help"],
+            [str(TAU2_PATH / ".venv/bin/tau2"), "--help"],
             capture_output=True,
             text=True,
-            cwd=tau2_path
+            cwd=TAU2_PATH
         )
         
         if result.returncode == 0:
@@ -56,14 +59,14 @@ def test_tau2_installation():
         print(f"❌ Error testing tau2 command: {e}")
         return False
 
+
 def test_environment_setup():
     """Test environment configuration."""
     
     print("\n🔍 Testing environment setup...")
     
     # Set environment variables
-    tau2_path = Path(__file__).parent.parent / "tau2-bench"
-    os.environ["TAU2_DATA_DIR"] = str(tau2_path / "data")
+    os.environ["TAU2_DATA_DIR"] = str(TAU2_PATH / "data")
     
     # Check data directory
     data_dir = Path(os.environ["TAU2_DATA_DIR"])
@@ -73,10 +76,10 @@ def test_environment_setup():
         print("❌ Data directory not found")
         return False
     
-    # Check if project .env file exists
-    project_env_file = Path(__file__).parent / ".env"
+    # Check if project .env file exists (in OUR multi-turn folder, NOT in tau2-bench)
+    project_env_file = CODE_PATH / ".env"
     if project_env_file.exists():
-        print("✅ Project .env file exists")
+        print("✅ Project .env file exists (in multi-turn folder)")
         
         # Check if API keys are configured
         with open(project_env_file, 'r') as f:
@@ -91,10 +94,11 @@ def test_environment_setup():
             else:
                 print("⚠️  OpenAI API key not configured")
     else:
-        print("❌ Project .env file not found")
+        print("❌ Project .env file not found in multi-turn folder")
         return False
     
     return True
+
 
 def test_basic_functionality():
     """Test basic tau2-bench functionality."""
@@ -104,10 +108,10 @@ def test_basic_functionality():
     try:
         # Test check-data command
         result = subprocess.run(
-            ["../tau2-bench/.venv/bin/tau2", "check-data"],
+            [str(TAU2_PATH / ".venv/bin/tau2"), "check-data"],
             capture_output=True,
             text=True,
-            cwd=Path(__file__).parent.parent / "tau2-bench"
+            cwd=TAU2_PATH
         )
         
         if result.returncode == 0:
@@ -119,10 +123,10 @@ def test_basic_functionality():
         
         # Test domain listing
         result = subprocess.run(
-            ["../tau2-bench/.venv/bin/tau2", "run", "--help"],
+            [str(TAU2_PATH / ".venv/bin/tau2"), "run", "--help"],
             capture_output=True,
             text=True,
-            cwd=Path(__file__).parent.parent / "tau2-bench"
+            cwd=TAU2_PATH
         )
         
         if result.returncode == 0:
@@ -137,14 +141,15 @@ def test_basic_functionality():
     
     return True
 
+
 def test_python_imports():
-    """Test if tau2-bench can be imported in Python."""
+    """Test if tau2-bench is properly installed."""
     
     print("\n🔍 Testing Python imports...")
     
     # Add tau2-bench src directory to Python path
-    tau2_path = Path(__file__).parent.parent / "tau2-bench" / "src"
-    sys.path.insert(0, str(tau2_path))
+    tau2_src_path = TAU2_PATH / "src"
+    sys.path.insert(0, str(tau2_src_path))
     
     try:
         # Test basic imports
@@ -172,6 +177,7 @@ def test_python_imports():
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
         return False
+
 
 def main():
     """Run all tests."""
