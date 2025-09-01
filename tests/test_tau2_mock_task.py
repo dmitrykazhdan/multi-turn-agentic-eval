@@ -73,7 +73,7 @@ def run_minimal_evaluation(model="xai/grok-3-mini", user_llm="gpt-4o-mini"):
         "--agent-llm", model,  # Use correct model identifier
         "--user-llm", user_llm, 
         "--num-trials", "1",
-        "--num-tasks", "2",
+        "--num-tasks", "1",
         "--max-concurrency", "1"
     ]
     
