@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import List, Optional
 
 from tau2_ext.data_processing.data_preparer import DataPreparer
-from metrics_calculator import MetricsCalculator, MetricsVisualizer
+from tau2_ext.metrics.metrics_calculator import MetricsCalculator
+from tau2_ext.visualisations.metrics_visualizer import MetricsVisualizer
 
 
 def run_analysis(
