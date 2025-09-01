@@ -2,7 +2,8 @@
 
 from .conversation_analyzer import ConversationAnalyzer, ConversationFeatures
 from .metrics_calculator import MetricsCalculator, MetricsVisualizer, MetricResults
-from .data_preparer import DataPreparer, ConversationData
+from .data_processing.data_preparer import DataPreparer, ConversationData
+from .data_processing.task_loader import TaskLoader
 from .tool_analyzer import ToolAnalyzer, ToolMetrics, PerToolAggregatedMetrics
 from .pipeline import Tau2Pipeline
 from .filter_convos import ConversationFilter, FilterCriteria
@@ -14,6 +15,9 @@ __all__ = [
     "ConversationFeatures",
     "DataPreparer",
     "ConversationData",
+
+    # Data processing
+    "TaskLoader",
 
     # Metrics calculation
     "MetricsCalculator",

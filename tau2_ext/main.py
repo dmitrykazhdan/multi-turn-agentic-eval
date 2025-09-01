@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Optional
 
-from data_preparer import DataPreparer
+from tau2_ext.data_processing.data_preparer import DataPreparer
 from metrics_calculator import MetricsCalculator, MetricsVisualizer
 
 
@@ -17,7 +17,7 @@ def run_analysis(
     print(f"🔍 Analyzing {len(simulation_files)} simulation files...")
     
     data_preparer = DataPreparer()
-    df = data_preparer.prepare_multiple_files(simulation_files)
+    df = data_preparer.prepare_multiple_simulation_files(simulation_files)
     
     if df.empty:
         print("❌ No conversation data found")
