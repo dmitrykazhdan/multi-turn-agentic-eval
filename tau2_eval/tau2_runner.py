@@ -7,35 +7,30 @@ import time
 from pathlib import Path
 from typing import List
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Define path variables
+PARENT_PATH = Path(__file__).parent.parent.parent
+CODE_PATH = PARENT_PATH / "multi-turn-agentic-eval"
+TAU2_PATH = PARENT_PATH / "tau2-bench"
+
+print(f"PARENT_PATH: {PARENT_PATH}")
+print(f"CODE_PATH: {CODE_PATH}")
+print(f"TAU2_PATH: {TAU2_PATH}")
 
 
 def setup_environment() -> bool:
     """Set up environment and API keys."""
-    project_env_file = Path(__file__).parent.parent / ".env"
-    tau2_path = Path(__file__).parent.parent.parent / "tau2-bench"
-    tau2_env_file = tau2_path / ".env"
+    project_env_file = CODE_PATH / ".env"
     
     if not project_env_file.exists():
         print("❌ Project .env file not found")
         return False
     
     try:
-        with open(project_env_file, 'r') as f:
-            project_env_content = f.read()
-        
-        api_keys = {}
-        for line in project_env_content.split('\n'):
-            if '=' in line and not line.startswith('#'):
-                key, value = line.split('=', 1)
-                api_keys[key.strip()] = value.strip()
-        
-        with open(tau2_env_file, 'w') as f:
-            if 'XAI_API_KEY' in api_keys:
-                f.write(f"XAI_API_KEY={api_keys['XAI_API_KEY']}\n")
-            if 'OPENAI_API_KEY' in api_keys:
-                f.write(f"OPENAI_API_KEY={api_keys['OPENAI_API_KEY']}\n")
-        
-        print("✅ API keys loaded from project .env file")
+        # Load API keys into environment variables using python-dotenv
+        load_dotenv(project_env_file)
+        print("✅ API keys loaded from project .env file into environment")
         return True
         
     except Exception as e:
@@ -43,11 +38,10 @@ def setup_environment() -> bool:
         return False
 
 
-def run_model_evaluation(model: str, domain: str = "telecom", tasks: int = 20, trials: int = 5) -> bool:
+def run_model_evaluation(model: str, domain: str = "telecom", tasks: int = 20, trials: int = 5, user_llm: str = "gpt-4o-mini") -> bool:
     """Run evaluation for a single model."""
     
-    tau2_path = Path(__file__).parent.parent.parent / "tau2-bench"
-    tau2_cmd = str(tau2_path / ".venv" / "bin" / "tau2")
+    tau2_cmd = str(TAU2_PATH / ".venv" / "bin" / "tau2")
     
     print(f"\n🚀 Running {model} on {domain} ({tasks} tasks, {trials} trials)")
     
@@ -55,7 +49,7 @@ def run_model_evaluation(model: str, domain: str = "telecom", tasks: int = 20, t
         tau2_cmd, "run",
         "--domain", domain,
         "--agent-llm", model,
-        "--user-llm", "gpt-4o-mini",
+        "--user-llm", user_llm,
         "--num-trials", str(trials),
         "--num-tasks", str(tasks),
         "--max-concurrency", "4",
@@ -66,7 +60,7 @@ def run_model_evaluation(model: str, domain: str = "telecom", tasks: int = 20, t
     
     try:
         original_cwd = os.getcwd()
-        os.chdir(tau2_path)
+        os.chdir(TAU2_PATH)
         
         result = subprocess.run(cmd, capture_output=True, text=True)
         
@@ -90,18 +84,7 @@ def run_model_evaluation(model: str, domain: str = "telecom", tasks: int = 20, t
         return False
 
 
-def view_results():
-    """View results using tau2 view command."""
-    
-    tau2_path = Path(__file__).parent.parent.parent / "tau2-bench"
-    tau2_cmd = str(tau2_path / ".venv" / "bin" / "tau2")
-    
-    print("\n📊 Viewing results...")
-    print("💡 Run this command to see results:")
-    print(f"   cd {tau2_path} && {tau2_cmd} view")
-
-
-def run_comparison(models: List[str], domain: str = "telecom", tasks: int = 20, trials: int = 5):
+def run_tau2_eval(models: List[str], domain: str = "telecom", tasks: int = 20, trials: int = 5, user_llm: str = "gpt-4o-mini"):
     """Run comparison for multiple models."""
     
     print("=" * 60)
@@ -116,7 +99,7 @@ def run_comparison(models: List[str], domain: str = "telecom", tasks: int = 20, 
     success_count = 0
     
     for model in models:
-        if run_model_evaluation(model, domain, tasks, trials):
+        if run_model_evaluation(model, domain, tasks, trials, user_llm):
             success_count += 1
     
     total_time = time.time() - start_time
@@ -124,11 +107,6 @@ def run_comparison(models: List[str], domain: str = "telecom", tasks: int = 20, 
     
     print(f"\n✅ Completed {success_count}/{len(models)} evaluations in {total_time_str}")
     
-    if success_count > 0:
-        view_results()
-
-
 if __name__ == "__main__":
-    # Example usage
     models = ["xai/grok-3", "xai/grok-4"]
-    run_comparison(models, domain="telecom", tasks=2, trials=2)
+    run_tau2_eval(models, domain="telecom", tasks=2, trials=2, user_llm="gpt-4o-mini")

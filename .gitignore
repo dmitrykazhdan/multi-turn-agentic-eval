@@ -6,3 +6,4 @@
 /analytics_results
 .DS_Store
 /data
+/tau2_eval/__pycache__
