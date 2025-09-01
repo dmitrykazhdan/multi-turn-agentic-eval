@@ -1,5 +1,6 @@
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Dict
+from collections import defaultdict
 
 def wilson_ci(k: int, n: int, z: float = 1.96) -> Tuple[float, float]:
     """Calculate Wilson confidence interval for binomial proportion."""
@@ -33,3 +34,15 @@ def levenshtein(a: List[str], b: List[str]) -> int:
     
     return dp[m][n]
 
+
+def tool_seq(lst: List[Dict]) -> List[str]:
+    """Extract tool names from tool list."""
+    return [x.get("name", "") for x in (lst or []) if x.get("name")]
+
+
+def group_tools_by_name(tools: List[Dict]) -> Dict[str, List[Dict]]:
+    """Group tools by name and extract their arguments."""
+    grouped = defaultdict(list)
+    for tool in tools:
+        grouped[tool.get("name", "")].append(tool.get("arguments", {}))
+    return grouped
