@@ -2,38 +2,29 @@
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from scipy import stats
 
-from metrics.utils import wilson_ci, levenshtein
-from metrics.metric_results import MetricResults
+from tau2_ext.metrics.utils import wilson_ci, levenshtein
+from tau2_ext.metrics.metric_results import MetricResults
+from tau2_ext.data_processing.tool_schema_loader import ToolSchemaLoader
 
 
 class MetricsCalculator:
     """Calculate comprehensive metrics for τ²-bench results."""
     
-    # Key arguments for each tool type
-    KEY_ARGS = {
-        "get_order_details": ["order_id"],
-        "cancel_pending_order": ["order_id", "reason"],
-        "return_delivered_order_items": ["order_id", "item_ids"],
-        "exchange_delivered_order_items": ["order_id", "item_ids", "new_item_ids"],
-        "modify_pending_order_items": ["order_id", "item_ids", "new_item_ids"],
-        "modify_pending_order_address": ["order_id", "address1", "city", "state", "zip"],
-        "find_user_id_by_email": ["email"],
-        "find_user_id_by_name_zip": ["first_name", "last_name", "zip"],
-        "get_user_details": ["user_id"],
-        "get_product_details": ["product_id"],
-        "calculate": ["expression"],
-    }
+    def __init__(self, tau2_bench_path: str = "/Users/AdminDK/code/tau2-bench"):
+        self.tool_schema_loader = ToolSchemaLoader(tau2_bench_path)
     
     def _tool_seq(self, lst: List[Dict]) -> List[str]:
         """Extract tool names from tool list."""
         return [x.get("name", "") for x in (lst or []) if x.get("name")]
     
-    def _args_match(self, name: str, exp_args: Dict, act_args: Dict) -> bool:
+    def _args_match(self, name: str, exp_args: Dict, act_args: Dict, domain: str) -> bool:
         """Check if arguments match for a given tool."""
-        keys = self.KEY_ARGS.get(name, [])
+        keys = self.tool_schema_loader.get_tool_schema(domain, name)
+        
+        # Use schema info for matching
         return all(
             k in exp_args and k in act_args and exp_args[k] == act_args[k] 
             for k in keys
@@ -46,7 +37,7 @@ class MetricsCalculator:
             grouped[tool.get("name", "")].append(tool.get("arguments", {}))
         return grouped
     
-    def _greedy_match_tools(self, gt_list: List[Dict], ex_list: List[Dict], tool_name: str) -> int:
+    def _greedy_match_tools(self, gt_list: List[Dict], ex_list: List[Dict], tool_name: str, domain: str) -> int:
         """Count true positives using greedy matching algorithm."""
         tp = 0
         used = [False] * len(ex_list)
@@ -54,7 +45,7 @@ class MetricsCalculator:
         for gt_args in gt_list:
             match_idx = None
             for j, ex_args in enumerate(ex_list):
-                if not used[j] and self._args_match(tool_name, gt_args, ex_args):
+                if not used[j] and self._args_match(tool_name, gt_args, ex_args, domain):
                     match_idx = j
                     break
             if match_idx is not None:
@@ -91,7 +82,7 @@ class MetricsCalculator:
                 ex_list = ex_by_name[tool].copy()
                 
                 # Count true positives via greedy matching
-                tp = self._greedy_match_tools(gt_list, ex_list, tool)
+                tp = self._greedy_match_tools(gt_list, ex_list, tool, row.get("domain"))
                 
                 fn = max(0, len(gt_list) - tp)
                 fp = max(0, len(ex_list) - tp)
@@ -128,7 +119,7 @@ class MetricsCalculator:
                 correct = 0
                 
                 for gargs in gt_args_list:
-                    if any(self._args_match(tool, gargs, e.get("arguments", {})) 
+                    if any(self._args_match(tool, gargs, e.get("arguments", {}), row.get("domain")) 
                            for e in executed_tools if e.get("name") == tool):
                         correct = 1
                         break
@@ -153,43 +144,20 @@ class MetricsCalculator:
                 n_correct = len(correct_data)
                 n_incorrect = len(incorrect_data)
                 
-                if n_correct > 0 and n_incorrect > 0:
+                # Include tools that appear in at least one scenario
+                if n_correct > 0 or n_incorrect > 0:
                     # Success rates
-                    p_correct = correct_data["success"].mean()
-                    p_incorrect = incorrect_data["success"].mean()
+                    p_correct = correct_data["success"].mean() if n_correct > 0 else 0.0
+                    p_incorrect = incorrect_data["success"].mean() if n_incorrect > 0 else 0.0
                     
                     # TCI
                     tci = p_correct - p_incorrect
                     
-                    # Confidence intervals for each proportion
-                    k_correct = correct_data["success"].sum()
-                    k_incorrect = incorrect_data["success"].sum()
-                    
-                    try:
-                        ci_correct = stats.proportion_conf_int(k_correct, n_correct, method='wilson')
-                        ci_incorrect = stats.proportion_conf_int(k_incorrect, n_incorrect, method='wilson')
-                    except AttributeError:
-                        # Manual Wilson CI calculation
-                        z = 1.96
-                        ci_correct = wilson_ci(k_correct, n_correct, z)
-                        ci_incorrect = wilson_ci(k_incorrect, n_incorrect, z)
-                    
-                    # Propagate uncertainty for TCI (difference of proportions)
-                    # Var(diff) = Var(p1) + Var(p2) - 2*Cov(p1,p2)
-                    # Assuming independence: Var(diff) = Var(p1) + Var(p2)
-                    var_correct = (ci_correct[1] - ci_correct[0])**2 / (4 * z**2)
-                    var_incorrect = (ci_incorrect[1] - ci_incorrect[0])**2 / (4 * z**2)
-                    var_tci = var_correct + var_incorrect
-                    
-                    tci_se = np.sqrt(var_tci)
-                    tci_ci_lower = tci - z * tci_se
-                    tci_ci_upper = tci + z * tci_se
+
                     
                     rows.append({
                         "tool": tool,
                         "TCI": tci,
-                        "TCI_ci_lower": tci_ci_lower,
-                        "TCI_ci_upper": tci_ci_upper,
                         "p_correct": p_correct,
                         "p_incorrect": p_incorrect,
                         "n_correct": n_correct,
@@ -198,7 +166,7 @@ class MetricsCalculator:
             
             return pd.DataFrame(rows)
         else:
-            return pd.DataFrame(columns=["tool", "TCI", "TCI_ci_lower", "TCI_ci_upper", "p_correct", "p_incorrect", "n_correct", "n_incorrect"])
+            return pd.DataFrame(columns=["tool", "TCI", "p_correct", "p_incorrect", "n_correct", "n_incorrect"])
     
 
     def calculate_sequence_compliance(self, df: pd.DataFrame) -> pd.DataFrame:

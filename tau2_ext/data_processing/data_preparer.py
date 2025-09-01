@@ -4,8 +4,8 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, List
 
-from data_processing.conversation_data import ConversationData
-from data_processing.task_loader import TaskLoader
+from tau2_ext.data_processing.conversation_data import ConversationData
+from tau2_ext.data_processing.task_loader import TaskLoader
 
 class DataPreparer:
     """Prepare conversation data for metrics analysis."""
