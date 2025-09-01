@@ -15,6 +15,7 @@ class TaskLoader:
     def _load_all_domain_tasks(self) -> Dict[str, List[Dict]]:
         """Load expected tools for all available domains from tasks.json."""
         expected_tools = {}
+        self.full_task_data = {}  # Store full task information
         
         # Look for domains in the tau2-bench data structure
         domains_dir = self.tau2_bench_path / "data" / "tau2" / "domains"
@@ -47,6 +48,9 @@ class TaskLoader:
                             }
                             for action in task["evaluation_criteria"]["actions"]
                         ]
+                        
+                        # Store full task information
+                        self.full_task_data[full_task_id] = task
                     
                     print(f"✅ Loaded {len(tasks)} tasks for domain: {domain_name}")
                     
@@ -62,6 +66,11 @@ class TaskLoader:
         """Get expected tools for a specific task."""
         full_task_id = f"{domain}_{task_id}"
         return self.tasks_data.get(full_task_id, [])
+    
+    def get_task_info(self, domain: str, task_id: str) -> Dict:
+        """Get full task information for a specific task."""
+        full_task_id = f"{domain}_{task_id}"
+        return self.full_task_data.get(full_task_id, {})
     
     def get_task_count(self, domain: str) -> int:
         """Get the number of tasks for a specific domain."""
